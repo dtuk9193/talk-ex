@@ -1,0 +1,58 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]; then
+    echo "No command found"
+    exit
+fi
+
+if [ $1 == "ready" ]; then
+    if [ -e .env ]
+    then
+        echo ".env is already exists"
+    else
+        echo "Making .env file ..."
+        cp .env.example .env
+    fi
+
+    source .env
+
+    if [ -e docker-compose.yml ]
+    then
+        echo "docker-compose.yml is already exists"
+    else
+        echo "Making docker-compose.yml file ..."
+        cp docker-compose.yml.example docker-compose.yml
+    fi
+
+    COMPOSE="docker-compose -f docker-compose.yml"
+
+    echo "Setting permission for docker/php/init.sh ..."
+    chmod a+x docker/php/init.sh
+
+    echo "Build and Run docker images ..."
+    $COMPOSE up -d --build
+
+    echo "Resolve dependencies ..."
+    $COMPOSE exec app composer install
+
+    echo "Migrating database and run seed ..."
+    $COMPOSE exec app php artisan migrate --seed
+
+    echo "Talk Example project is ready to use"
+    echo "Thank you"
+fi
+
+if [ $1 == "about" ]; then
+    echo "Developed By - Nahid Bin Azhar"
+    echo "Email - nahid.dns@gmail.com"
+    echo "Repo Link - https://github.com/nahid/talk-example"
+    echo "Talk Repo Link - https://github.com/nahid/talk"
+fi
+
+if [ $1 == "example" ]; then
+    open https://github.com/nahid/talk-example
+fi
+
+if [ $1 == "go" ]; then
+    open https://github.com/nahid/talk
+fi
